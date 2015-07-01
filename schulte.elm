@@ -73,7 +73,7 @@ view state =
 
 mistake : Game -> UserGuess -> Bool
 mistake game userGuess =
-  case  whereIs game.guess game.table of
+  case whereIs game.guess game.table of
     Just answer -> userGuess /= answer
     Nothing -> True
 
