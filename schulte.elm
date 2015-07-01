@@ -1,4 +1,5 @@
-import Graphics.Element exposing (Element, show)
+import Graphics.Element exposing (..)
+import Graphics.Input exposing (..)
 import Random
 import Time exposing (Time)
 
@@ -19,10 +20,12 @@ type State = Greetings
 
 type Action = StartGame Size
             | TapColumn UserGuess
+            | None
 
 update : (Time, Action) -> State -> State
 update (time, action) state =
   case action of
+    None -> state
 
     StartGame size ->
       StartedAt time { table = randomTable size time
@@ -43,22 +46,35 @@ update (time, action) state =
 
         otherwise -> Greetings
 
-input = Signal.constant (StartGame 3)
+input : Signal.Mailbox Action
+input = Signal.mailbox None
 
-main = Signal.map view <| Signal.foldp update Greetings (Time.timestamp input)
+main = Signal.map view <| Signal.foldp update Greetings (Time.timestamp input.signal)
 
 view : State -> Element
 view state =
+  let address = Signal.message input.address in
   case state of
-    Greetings -> show "Greetings"
-    StartedAt _ game -> show game
+    Greetings ->
+      flow down [ button (address (StartGame 3)) "3 &times; 3"
+                , button (address (StartGame 5)) "5 &times; 5"
+                , button (address (StartGame 7)) "7 &times; 7"
+                ]
+
+    StartedAt _ game ->
+      flow down [ show game
+                , flow right
+                    <| List.map (\x -> button (address (TapColumn x)) (toString x)) [1..(List.length game.table)]
+                ]
+
     Lose game -> show "Loser"
+
     Finished time -> show time
 
 mistake : Game -> UserGuess -> Bool
 mistake game userGuess =
   case  whereIs game.guess game.table of
-    Just answer -> userGuess == answer
+    Just answer -> userGuess /= answer
     Nothing -> True
 
 whereIs : Number -> Table -> Maybe UserGuess
