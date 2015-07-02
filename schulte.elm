@@ -2,6 +2,7 @@ import Color exposing (..)
 import Graphics.Element exposing (..)
 import Graphics.Input exposing (..)
 import Random
+import String
 import Time exposing (Time)
 
 type alias Number = Int
@@ -70,10 +71,21 @@ view state =
 
     Lose game ->
       flow down [ showTable (highlightWrong game.guess) game.table
-                , show "Loser"
+                , button (address (StartGame (List.length game.table))) "Try Again"
                 ]
 
-    Finished time -> show time
+    Finished time ->
+      flow down [ showTime time
+                , button (address (StartGame 3)) "3 &times; 3"
+                , button (address (StartGame 5)) "5 &times; 5"
+                , button (address (StartGame 7)) "7 &times; 7"
+                ]
+
+showTime : Time -> Element
+showTime time =
+  let seconds = ((round time) % 60000) // 1000 in
+  let minutes = (round time) // 60000 in
+    show <| String.concat [toString minutes, ":", toString seconds]
 
 plainColor : Number -> Element
 plainColor = genericColor <| \_ -> lightYellow
