@@ -1,3 +1,4 @@
+import Color exposing (..)
 import Graphics.Element exposing (..)
 import Graphics.Input exposing (..)
 import Random
@@ -62,14 +63,45 @@ view state =
                 ]
 
     StartedAt _ game ->
-      flow down [ show game
+      flow down [ showTable plainColor game.table
                 , flow right
                     <| List.map (\x -> button (address (TapColumn x)) (toString x)) [1..(List.length game.table)]
                 ]
 
-    Lose game -> show "Loser"
+    Lose game ->
+      flow down [ showTable (highlightWrong game.guess) game.table
+                , show "Loser"
+                ]
 
     Finished time -> show time
+
+plainColor : Number -> Element
+plainColor = genericColor <| \_ -> lightYellow
+
+highlightWrong : Number -> Number -> Element
+highlightWrong highlight =
+  genericColor <| \x -> if x == highlight then
+                          lightRed
+                        else
+                          lightYellow
+
+genericColor : (Number -> Color) -> Number -> Element
+genericColor colorize number =
+  container 45 45 middle
+  << color (colorize number)
+  << container 40 40 middle
+  <| show number
+
+showTable : (Number -> Element) -> Table -> Element
+showTable decorate table =
+  let column = showColumn decorate in
+  flow right
+    <| List.map column table
+
+showColumn : (Number -> Element) -> List Number -> Element
+showColumn decorate column =
+  flow down
+    <| List.map decorate column
 
 mistake : Game -> UserGuess -> Bool
 mistake game userGuess =
