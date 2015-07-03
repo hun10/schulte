@@ -3,7 +3,9 @@ import Graphics.Element exposing (..)
 import Graphics.Input exposing (..)
 import Random
 import String
+import Text
 import Time exposing (Time)
+import Window
 
 type alias Number = Int
 type alias Table = List (List Number)
@@ -51,41 +53,45 @@ update (time, action) state =
 input : Signal.Mailbox Action
 input = Signal.mailbox None
 
-main = Signal.map view <| Signal.foldp update Greetings (Time.timestamp input.signal)
+current = Signal.foldp update Greetings (Time.timestamp input.signal)
+
+main = Signal.map2 (\x -> centerize x << view) Window.dimensions current
+
+centerize : (Int,Int) -> Element -> Element
+centerize (w,h) e =
+  container w h middle e
 
 view : State -> Element
 view state =
   let address = Signal.message input.address in
+  let startGame = \x -> button (address (StartGame x)) (String.concat [toString x, " &times; ", toString x]) in
+  let startButtons = List.map startGame [3, 5, 7] in
   case state of
     Greetings ->
-      flow down [ button (address (StartGame 3)) "3 &times; 3"
-                , button (address (StartGame 5)) "5 &times; 5"
-                , button (address (StartGame 7)) "7 &times; 7"
-                ]
+      flow down startButtons
 
     StartedAt _ game ->
       flow down [ showTable plainColor game.table
                 , flow right
-                    <| List.map (\x -> button (address (TapColumn x)) (toString x)) [1..(List.length game.table)]
+                    <| List.map (\x -> clickable (address (TapColumn x)) (buttonColor)) [1..(List.length game.table)]
                 ]
 
     Lose game ->
-      flow down [ showTable (highlightWrong game.guess) game.table
-                , button (address (StartGame (List.length game.table))) "Try Again"
+      flow down [ button (address (StartGame (List.length game.table))) "Try Again"
+                , showTable (highlightWrong game.guess) game.table
                 ]
 
     Finished time ->
-      flow down [ showTime time
-                , button (address (StartGame 3)) "3 &times; 3"
-                , button (address (StartGame 5)) "5 &times; 5"
-                , button (address (StartGame 7)) "7 &times; 7"
-                ]
+      flow down (startButtons ++ [ showTime time ])
 
 showTime : Time -> Element
 showTime time =
-  let seconds = ((round time) % 60000) // 1000 in
-  let minutes = (round time) // 60000 in
-    show <| String.concat [toString minutes, ":", toString seconds]
+  let roundTime = (round time) // 1000 in
+  let seconds = roundTime % 60 in
+  let minutes = roundTime // 60 in
+    container 100 50 middle
+    <| centered << Text.fromString
+       <| String.concat [toString minutes, ":", if seconds < 10 then "0" else "", toString seconds]
 
 plainColor : Number -> Element
 plainColor = genericColor <| \_ -> lightYellow
@@ -96,6 +102,8 @@ highlightWrong highlight =
                           lightRed
                         else
                           lightYellow
+
+buttonColor = genericColor (\_ -> purple) 0
 
 genericColor : (Number -> Color) -> Number -> Element
 genericColor colorize number =
