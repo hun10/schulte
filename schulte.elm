@@ -110,7 +110,7 @@ genericColor colorize number =
   container 45 45 middle
   << color (colorize number)
   << container 40 40 middle
-  <| show number
+  <| centered << Text.fromString << toString <| number
 
 showTable : (Number -> Element) -> Table -> Element
 showTable decorate table =
