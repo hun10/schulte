@@ -9,8 +9,10 @@ main =
   let toyScreen = screen 1 32 48 in
   let phoneScreen = screen 10 320 480 in
   let landscapeScreen = screen 10 480 320 in
+  let padScreen = screen 10 768 1024 in
   let sampleCell = cell 34 lightYellow "25" in
   let sampleTable x = table x <| \_ -> \_ -> sampleCell in
+  let largeTable x = table x <| \_ -> \_ -> cell 68 lightYellow "25" in
   flow down <| List.map (test >> indented 10)
     [ ("Screen border simulation", toyScreen empty)
     , ("Table 3 &times; 3", sampleTable 3 |> phoneScreen)
@@ -19,6 +21,7 @@ main =
     , ("Table 3 &times; 3", sampleTable 3 |> landscapeScreen)
     , ("Table 5 &times; 5", sampleTable 5 |> landscapeScreen)
     , ("Table 7 &times; 7", sampleTable 7 |> landscapeScreen)
+    , ("Table 7 &times; 7", largeTable 7 |> padScreen)
     ]
 
 
