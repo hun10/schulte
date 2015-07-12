@@ -10,8 +10,12 @@ main =
   let phoneScreen = screen 10 320 480 in
   let landscapeScreen = screen 10 480 320 in
   let padScreen = screen 10 768 1024 in
-  let sampleCell x = toString x |> cell 34 lightYellow in
-  let sampleTable x = grid x (List.map sampleCell [1..(x*x)]) in
+  let mcell s c x = toString x |> cell s c in
+  let sampleCell = mcell 34 in
+  let yellowCell = sampleCell lightYellow in
+  let blueCell = sampleCell lightBlue in
+  let checkered = List.indexedMap <| \i -> if i % 2 == 0 then blueCell else yellowCell in
+  let sampleTable x = grid x (checkered [1..(x*x)]) in
   flow down <| List.map (test >> indented 10)
     [ ("Screen border simulation", toyScreen empty)
     , ("Grid", grid 3 (List.map show [1..9]))
