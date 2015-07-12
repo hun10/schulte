@@ -10,31 +10,28 @@ main =
   let phoneScreen = screen 10 320 480 in
   let landscapeScreen = screen 10 480 320 in
   let padScreen = screen 10 768 1024 in
-  let sampleCell = cell 34 lightYellow "25" in
-  let sampleTable x = table x <| \_ -> \_ -> sampleCell in
-  let largeTable x = table x <| \_ -> \_ -> cell 68 lightYellow "25" in
+  let sampleCell x = toString x |> cell 34 lightYellow in
+  let sampleTable x = grid x (List.map sampleCell [1..(x*x)]) in
   flow down <| List.map (test >> indented 10)
     [ ("Screen border simulation", toyScreen empty)
+    , ("Grid", grid 3 (List.map show [1..9]))
     , ("Table 3 &times; 3", sampleTable 3 |> phoneScreen)
     , ("Table 5 &times; 5", sampleTable 5 |> phoneScreen)
     , ("Table 7 &times; 7", sampleTable 7 |> phoneScreen)
     , ("Table 3 &times; 3", sampleTable 3 |> landscapeScreen)
     , ("Table 5 &times; 5", sampleTable 5 |> landscapeScreen)
     , ("Table 7 &times; 7", sampleTable 7 |> landscapeScreen)
-    , ("Table 7 &times; 7", largeTable 7 |> padScreen)
     ]
 
 
-table : Int -> (Int -> Int -> Element) -> Element
-table size render =
-  List.map (render >> row size) [1..size] |>
-    flow down
-
-row : Int -> (Int -> Element) -> Element
-row size render =
-  List.map render [1..size] |>
-    flow right
-
+grid : Int -> (List Element) -> Element
+grid width els =
+  case els of
+    [] -> empty
+    otherwise ->
+      flow right (List.take width els)
+      `above`
+      grid width (List.drop width els)
 
 cell : Int -> Color -> String -> Element
 cell size color' text =
